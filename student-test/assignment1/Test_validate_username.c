@@ -18,5 +18,15 @@ void test_validate_my_username()
      * TODO: Replace the line below with your code here as described above to verify your /conf/username.txt 
      * config file and my_username() functions are setup properly
      */
-    TEST_ASSERT_TRUE_MESSAGE(false,"AESD students, please fix me!");
+    // Get the username hardcoded in my_username()
+    const char *hardcoded_username = my_username();
+
+    // Get the username from the configuration file
+    char *conf_username = malloc_username_from_conf_file();
+
+    // Verify that the two usernames are equal
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(hardcoded_username, conf_username, "Usernames do not match!");
+
+    // Free the allocated memory
+    free(conf_username);
 }
