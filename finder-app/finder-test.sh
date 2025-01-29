@@ -49,29 +49,12 @@ then
 	fi
 fi
 echo "Removing the old writer utility and compiling as a native application"
-# Ensure we are in the correct directory
-BUILD_DIR="../build"
-
-# If the build directory does not exist, create it
-if [ ! -d "$BUILD_DIR" ]; then
-    mkdir -p "$BUILD_DIR"
-fi
-
-cd "$BUILD_DIR"
-
-make clean_all
-# Force native compilation.
-# Alternatively remove ENV variable export CROSS_COMPILE=aarch64-none-linux-gnu- 
-unset CROSS_COMPILE
-cmake -DCMAKE_C_COMPILER=gcc ..
+make clean
 make
-
-# Return to the finder-app directory
-cd ../finder-app
 
 for i in $( seq 1 $NUMFILES)
 do
-	../build/writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
+	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
 done
 
 OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")

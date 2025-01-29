@@ -30,12 +30,4 @@ set(WRITER_SOURCE ${SOURCE_DIR}/writer.c)
 # Create the writer executable
 add_executable(writer ${WRITER_SOURCE})
 install(TARGETS writer DESTINATION bin)
-
-#add_executable(writer writer.c)
-
 install(TARGETS writer DESTINATION bin)
-
-add_custom_target(clean_all
-    COMMAND rm -rf CMakeFiles CMakeCache.txt writer
-    COMMENT "Cleaning up build artifacts"
-)
