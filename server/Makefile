@@ -1,4 +1,6 @@
 # Cross-compilation setup
+# To compile for aarch64-linux-gnu-gcc, run:
+# make CROSS_COMPILE=aarch64-linux-gnu-
 ifdef CROSS_COMPILE
 CC = $(CROSS_COMPILE)gcc
 else
