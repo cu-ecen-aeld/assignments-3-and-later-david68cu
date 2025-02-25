@@ -58,22 +58,78 @@ void setup_signal_handling() {
     sigaction(SIGTERM, &sa, NULL);
 }
 
+// void daemonize() {
+//     pid_t pid = fork();
+//     if (pid < 0) {
+//         perror("Fork failed");
+//         exit(1);
+//     }
+//     if (pid > 0) {
+//         exit(0);
+//     }
+
+//     setsid();
+//     chdir("/");
+//     umask(0);
+//     close(STDIN_FILENO);
+//     close(STDOUT_FILENO);
+//     close(STDERR_FILENO);
+// }
+
 void daemonize() {
-    pid_t pid = fork();
+    pid_t pid;
+
+    // Fork off the parent process
+    pid = fork();
+
     if (pid < 0) {
-        perror("Fork failed");
-        exit(1);
-    }
-    if (pid > 0) {
-        exit(0);
+        perror("fork failed");
+        exit(EXIT_FAILURE);
     }
 
-    setsid();
-    chdir("/");
+    // If we got a good PID, exit the parent process
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    // Create a new session
+    if (setsid() < 0) {
+        perror("setsid failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Fork again to ensure we're not a session leader
+    pid = fork();
+
+    if (pid < 0) {
+        perror("fork failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    // Set file permissions
     umask(0);
+
+    // Change working directory to root
+    if (chdir("/") < 0) {
+        perror("chdir failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Close standard file descriptors
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
+
+    // Redirect stdin, stdout, stderr to /dev/null
+    int fd = open("/dev/null", O_RDWR);
+    dup2(fd, STDIN_FILENO);
+    dup2(fd, STDOUT_FILENO);
+    dup2(fd, STDERR_FILENO);
+    close(fd);
 }
 
 int main(int argc, char *argv) {

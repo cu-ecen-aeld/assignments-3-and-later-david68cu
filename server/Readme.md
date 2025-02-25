@@ -25,3 +25,8 @@ kill -SIGINT 12345 or kill -2 12345  # SIGINT intrerrup form keyboras
 kill -SIGKILL 12345 or kill -9 12345 # Force kill process( can not be ignored)
 ```
 
+test for leakeage
+
+```bask
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=/tmp/valgrind-out.txt ./aesdsocket
+```
