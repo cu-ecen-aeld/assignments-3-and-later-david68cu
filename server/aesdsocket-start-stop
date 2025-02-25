@@ -12,6 +12,7 @@ DAEMON=/usr/bin/aesdsocket  # Location of the binary
 DAEMON_ARGS="-d"  # Runs aesdsocket in daemon mode
 PIDFILE=/var/run/aesdsocket.pid  # PID file location
 USER=root  # Change if needed
+SIGNAL=TERM # Graceful terminate the process
 
 case "$1" in
     start)
@@ -26,14 +27,25 @@ case "$1" in
         ;;
     
     stop)
-        echo "Stopping aesdsocket server..."
-        start-stop-daemon --stop --quiet --pidfile "$PIDFILE" --exec "$DAEMON"
-        if [ $? -eq 0 ]; then
-            echo "aesdsocket stopped successfully."
-            rm -f "$PIDFILE"
+        echo "Stopping aesdsocket server gracefully..."
+        if [ -f "$PIDFILE" ]; then
+            PID=$(cat "$PIDFILE")
+            if kill -s $SIGNAL "$PID"; then
+                echo "SIGTERM sent to aesdsocket (PID: $PID)."
+                sleep 2  # Allow time for graceful shutdown
+                if ps -p "$PID" > /dev/null 2>&1; then
+                    echo "Process still running, forcing stop..."
+                    kill -9 "$PID"
+                fi
+                rm -f "$PIDFILE"
+                echo "aesdsocket stopped."
+            else
+                echo "Failed to stop aesdsocket."
+                exit 1
+            fi
         else
-            echo "Failed to stop aesdsocket."
-            exit 1
+            echo "aesdsocket is not running."
+            exit 3
         fi
         ;;
     
