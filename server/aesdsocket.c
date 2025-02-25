@@ -58,37 +58,16 @@ void setup_signal_handling() {
     sigaction(SIGTERM, &sa, NULL);
 }
 
-// void daemonize() {
-//     pid_t pid = fork();
-//     if (pid < 0) {
-//         perror("Fork failed");
-//         exit(1);
-//     }
-//     if (pid > 0) {
-//         exit(0);
-//     }
-
-//     setsid();
-//     chdir("/");
-//     umask(0);
-//     close(STDIN_FILENO);
-//     close(STDOUT_FILENO);
-//     close(STDERR_FILENO);
-// }
-
 void daemonize() {
     pid_t pid;
 
     // Fork off the parent process
     pid = fork();
-
     if (pid < 0) {
         perror("fork failed");
         exit(EXIT_FAILURE);
     }
-
-    // If we got a good PID, exit the parent process
-    if (pid > 0) {
+    if (pid > 0) {  // Parent exits
         exit(EXIT_SUCCESS);
     }
 
@@ -98,41 +77,35 @@ void daemonize() {
         exit(EXIT_FAILURE);
     }
 
-    // Fork again to ensure we're not a session leader
+    // Fork again to prevent acquiring a terminal again
     pid = fork();
-
     if (pid < 0) {
         perror("fork failed");
         exit(EXIT_FAILURE);
     }
-
-    if (pid > 0) {
+    if (pid > 0) { // First child exits
         exit(EXIT_SUCCESS);
     }
 
-    // Set file permissions
+    // Set permissions and change working directory
     umask(0);
-
-    // Change working directory to root
     if (chdir("/") < 0) {
         perror("chdir failed");
         exit(EXIT_FAILURE);
     }
 
-    // Close standard file descriptors
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
-
-    // Redirect stdin, stdout, stderr to /dev/null
+    // Redirect standard file descriptors
     int fd = open("/dev/null", O_RDWR);
-    dup2(fd, STDIN_FILENO);
-    dup2(fd, STDOUT_FILENO);
-    dup2(fd, STDERR_FILENO);
-    close(fd);
+    if (fd != -1) {
+        dup2(fd, STDIN_FILENO);
+        dup2(fd, STDOUT_FILENO);
+        dup2(fd, STDERR_FILENO);
+        close(fd);
+    }
 }
 
-int main(int argc, char *argv) {
+
+int main(int argc, char *argv[]) {
     openlog("aesdsocket", LOG_PID, LOG_USER);
 
     struct sockaddr_in server_addr, client_addr;
@@ -142,7 +115,7 @@ int main(int argc, char *argv) {
     int server_socket = -1, client_socket = -1;
     FILE *log_file = NULL;
 
-    if (argc > 1 && strcmp(argv, "-d") == 0) {
+    if (argc > 1 && strcmp(argv[1], "-d") == 0) {
         daemon_mode = 1;
     }
 
