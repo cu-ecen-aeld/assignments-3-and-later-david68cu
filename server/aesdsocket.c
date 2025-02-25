@@ -20,7 +20,12 @@ volatile sig_atomic_t shutdown_flag = 0;
 
 void signal_handler(int sig) {
     shutdown_flag = 1;
-    syslog(LOG_INFO, "Caught signal, exiting");
+    // This make the signal handler no reentrant
+    //syslog(LOG_INFO, "Caught signal, exiting");
+    // Correct way to log in signal handler
+    // Use async-safe write() instead of syslog()
+    const char msg[] = "Caught signal, exiting\n";
+    write(STDERR_FILENO, msg, sizeof(msg) - 1);
 }
 
 static int cleanup_done = 0;
